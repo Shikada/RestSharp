@@ -356,21 +356,28 @@ namespace RestSharp
                 if (propType.IsArray)
                 {
                     var elementType = propType.GetElementType();
+                    var valArray = (Array) val;
 
-                    if (((Array) val).Length > 0 &&
-                        elementType != null &&
+                    if (valArray.Length == 0)
+                    {
+                        val = "";
+                        AddParameter(prop.Name, val);
+                        continue;
+                    }
+
+                    if (elementType != null &&
                         (elementType.IsPrimitive || elementType.IsValueType || elementType == typeof(string)))
                     {
                         // convert the array to an array of strings
-                        var values = (from object item in (Array) val
+                        var values = (from object item in valArray
                             select item.ToString()).ToArray();
 
-                        val = string.Join(",", values);
+                        val = string.Join(",", values.Select(x => x.ToString()));
                     }
                     else
                     {
                         // try to cast it
-                        val = string.Join(",", (string[]) val);
+                        val = string.Join(",", ((IEnumerable<object>)val).Select(x => (x == null) ? "null" : x.ToString()));
                     }
                 }
 
